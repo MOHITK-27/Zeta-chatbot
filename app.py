@@ -93,8 +93,8 @@ def display_sidebar():
         st.header("🧠 AI Model")
         model_options = {
             "DeepSeek R1": "deepseek-r1-distill-llama-70b",
-            "Mixtral 8x7B": "mixtral-8x7b-32768", 
-            "Llama2 70B": "llama2-70b-4096"
+            # "Mixtral 8x7B": "mixtral-8x7b-32768", 
+            # "Llama2 70B": "llama2-70b-4096"
         }
         selected_model = st.selectbox(
             "Select Model",
