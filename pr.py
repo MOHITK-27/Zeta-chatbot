@@ -33,6 +33,8 @@ PREDEFINED_RESPONSES = {
         "patterns": [
             r"current version",
             r"what version are you",
+            r"whats your version",
+            r"what is your version",
             r"version number",
             r"v\d+\.\d+"
         ],
