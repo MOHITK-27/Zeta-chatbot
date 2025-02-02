@@ -21,7 +21,7 @@ st.set_page_config(page_title="ZETA", page_icon="🤖", layout="wide")
 st.markdown("""
 <style>
     .stApp {
-        max-width: 12000px;
+        max-width: 1200px;
         margin: 0 auto;
     }
     
@@ -31,6 +31,13 @@ st.markdown("""
         margin: 1rem 0;
         background-color: #f8f9fa;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        animation: fadeIn 0.3s ease-out;
+        transition: all 0.2s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
     .thinking-block {
@@ -52,12 +59,43 @@ st.markdown("""
         color: #333333;
     }
     
-    .user-message {
-        border-left: 4px solid #4a90e2;
+    .typing-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 15px;
+        background: #f0f2f6;
+        border-radius: 15px;
     }
     
-    .assistant-message {
-        border-right: 4px solid #4a90e2;
+    .typing-dot {
+        width: 6px;
+        height: 6px;
+        margin: 0 2px;
+        background: #4a90e2;
+        border-radius: 50%;
+        animation: bounce 1.4s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-6px); }
+    }
+    
+    .reaction-container {
+        display: flex;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .reaction-btn {
+        border: none;
+        background: none;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .reaction-btn:hover {
+        transform: scale(1.2);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -83,18 +121,74 @@ def process_think_blocks(response):
     return processed_response
 
 # ======================================
+# Advanced Features
+# ======================================
+def web_search(query):
+    try:
+        from googlesearch import search
+        results = list(search(query, num=3, stop=3, pause=1))
+        return f"**Web Results:**\n- " + "\n- ".join(results)
+    except Exception as e:
+        return f"🔍 Web search unavailable: {str(e)}"
+
+def file_analyzer():
+    uploaded_file = st.sidebar.file_uploader(
+        "📁 Upload File (PDF/Image/Text)",
+        type=["pdf", "png", "jpg", "txt"]
+    )
+    
+    if uploaded_file:
+        file_type = uploaded_file.type
+        if "pdf" in file_type:
+            from PyPDF2 import PdfReader
+            reader = PdfReader(uploaded_file)
+            analysis = "\n".join([page.extract_text() for page in reader.pages[:3]])
+            return f"**PDF Summary:**\n{analysis[:500]}..."
+        elif "image" in file_type:
+            from PIL import Image
+            img = Image.open(uploaded_file)
+            return f"**Image Analysis:** {img.size} pixels, {img.mode} mode"
+        elif "text" in file_type:
+            return f"**Text Content:**\n{uploaded_file.getvalue().decode()[:500]}..."
+    return ""
+
+def typing_animation():
+    return st.markdown("""
+    <div class="typing-indicator">
+        <div class="typing-dot" style="animation-delay: 0s"></div>
+        <div class="typing-dot" style="animation-delay: 0.2s"></div>
+        <div class="typing-dot" style="animation-delay: 0.4s"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def message_reactions(message_id):
+    if f"reactions_{message_id}" not in st.session_state:
+        st.session_state[f"reactions_{message_id}"] = {"👍": 0, "👎": 0}
+    
+    cols = st.columns(6)
+    with cols[0]:
+        if st.button(f"👍 {st.session_state[f'reactions_{message_id}']['👍']}", 
+                    key=f"like_{message_id}"):
+            st.session_state[f"reactions_{message_id}"]["👍"] += 1
+    with cols[1]:
+        if st.button(f"👎 {st.session_state[f'reactions_{message_id}']['👎']}",
+                    key=f"dislike_{message_id}"):
+            st.session_state[f"reactions_{message_id}"]["👎"] += 1
+
+# ======================================
 # Sidebar Configuration
 # ======================================
 def display_sidebar():
     with st.sidebar:
-        st.title("⚙️ Settings")
+        st.title("⚙️ Dashboard")
+        st.metric("Total Messages", len(st.session_state.messages))
         
         # Model Selection
         st.header("🧠 AI Model")
         model_options = {
             "DeepSeek R1": "deepseek-r1-distill-llama-70b",
-            # "Mixtral 8x7B": "mixtral-8x7b-32768", 
-            # "Llama2 70B": "llama2-70b-4096"
+            "Mixtral 8x7B": "mixtral-8x7b-32768", 
+            "Llama2 70B": "llama2-70b-4096"
         }
         selected_model = st.selectbox(
             "Select Model",
@@ -106,22 +200,15 @@ def display_sidebar():
         
         st.divider()
         
-        # Chat Controls
-        st.header("💬 Chat")
-        cc1, cc2 = st.columns([1,1])
-        with cc1:
-            if st.button("🧹 New Chat", help="Start fresh conversation"):
-                st.session_state.messages = []
-                st.rerun()
-        with cc2:
-            if st.button("📥 Export", help="Save chat history"):
-                chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages])
-                st.download_button("Download", chat_history, file_name="chat_history.txt")
+        # File Analyzer
+        analysis_result = file_analyzer()
+        if analysis_result:
+            st.info(analysis_result)
         
         st.divider()
         
         # Fun Section
-        st.header("🎉 Fun")
+        st.header("🎉 Features")
         f1, f2 = st.columns([1,1])
         with f1:
             if st.button("🎊 Confetti"):
@@ -143,7 +230,7 @@ def display_sidebar():
 # ======================================
 def main():
     st.title("🤖 ZETA")
-    st.caption("Your Intelligent Assistant Made by Mohit")
+    st.caption("Your Intelligent Assistant","Made with ❤️ by Mohit")
     st.divider()
 
     # Initialize session state
@@ -152,15 +239,15 @@ def main():
 
     # Display sidebar
     display_sidebar()
-    st.sidebar.title("Chat history")
-    st.sidebar.warning("In development")
+
     # Display chat messages
-    for message in st.session_state.messages:
+    for i, message in enumerate(st.session_state.messages):
         avatar = "👤" if message["role"] == "user" else "🤖"
         with st.chat_message(message["role"], avatar=avatar):
             if message["role"] == "assistant":
                 processed_content = process_think_blocks(message["content"])
                 st.markdown(processed_content, unsafe_allow_html=True)
+                message_reactions(i)
             else:
                 st.markdown(message["content"])
 
@@ -169,16 +256,12 @@ def main():
         # Add user message
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        with st.chat_message("user", avatar="👤"):
-            st.markdown(prompt)
-        
         # Generate response
         with st.chat_message("assistant", avatar="🤖"):
             response_placeholder = st.empty()
             full_response = ""
             
             try:
-                # Check for predefined response
                 predefined = get_predefined_response(prompt)
                 
                 if predefined:
@@ -190,6 +273,11 @@ def main():
                     messages = [{"role": m["role"], "content": m["content"]} 
                               for m in st.session_state.messages]
                     
+                    # Add web search results if needed
+                    if "search" in prompt.lower():
+                        web_results = web_search(prompt)
+                        messages.append({"role": "user", "content": f"{prompt}\n{web_results}"})
+                    
                     completion = client.chat.completions.create(
                         model=st.session_state.default_model,
                         messages=messages,
@@ -199,6 +287,7 @@ def main():
                     )
                     
                     # Stream response
+                    typing_animation()
                     for chunk in completion:
                         chunk_content = chunk.choices[0].delta.content or ""
                         full_response += chunk_content
