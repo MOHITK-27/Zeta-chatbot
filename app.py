@@ -230,7 +230,7 @@ def display_sidebar():
 # ======================================
 def main():
     st.title("🤖 ZETA")
-    st.caption("Your Intelligent Assistant","Made with ❤️ by Mohit")
+    st.caption("Your Intelligent Assistant Made with ❤️ by Mohit")
     st.divider()
 
     # Initialize session state
