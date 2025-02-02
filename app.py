@@ -200,6 +200,20 @@ def display_sidebar():
         
         st.divider()
         
+        # Chat Controls
+        st.header("💬 Chat")
+        cc1, cc2 = st.columns([1,1])
+        with cc1:
+            if st.button("🧹 New Chat", help="Start fresh conversation"):
+                st.session_state.messages = []
+                st.rerun()
+        with cc2:
+            if st.button("📥 Export", help="Save chat history"):
+                chat_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages])
+                st.download_button("Download", chat_history, file_name="chat_history.txt")
+        
+        st.divider()
+        
         # File Analyzer
         analysis_result = file_analyzer()
         if analysis_result:
