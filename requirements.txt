@@ -3,3 +3,4 @@ groq
 PyPDF2 
 Pillow 
 google
+googlesearch-python
