@@ -13,7 +13,7 @@ def show_sidebar():
         model_options = {
             "DeepSeek R1": "deepseek-r1-distill-llama-70b",
             "Mixtral 8x7B": "mixtral-8x7b-32768", 
-            "Llama2 70B": "llama2-70b-4096"
+            "Llama-3 70B": "llama-3.3-70b-versatile"
         }
         selected_model = st.selectbox(
             "Select Model",
