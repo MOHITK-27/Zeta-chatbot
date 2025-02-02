@@ -21,7 +21,7 @@ st.set_page_config(page_title="ZETA", page_icon="🤖", layout="wide")
 st.markdown("""
 <style>
     .stApp {
-        max-width: 1200px;
+        max-width: 12000px;
         margin: 0 auto;
     }
     
